@@ -1,0 +1,170 @@
+﻿@model IEnumerable<Store.DTO.GetVendorDTO>
+
+@{
+    ViewData["Title"] = "قائمة الموردين";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<!-- زر إضافة مورد جديد -->
+<p>
+    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addVendorModal">
+        إضافة مورد جديد
+    </button>
+</p>
+
+<!-- جدول الموردين -->
+<table class="table table-bordered table-striped">
+    <thead class="table-dark">
+        <tr>
+            <th>الرقم</th>
+            <th>اسم المورد</th>
+            <th class="text-center">الإجراءات</th>
+        </tr>
+    </thead>
+    <tbody>
+        @{
+            var i = 1;
+        }
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@(i++)</td>
+                <td>@item.Name</td>
+                <td class="text-center">
+                    <button class="btn btn-warning btn-sm me-1"
+                            data-id="@item.Id"
+                            data-name="@item.Name"
+                            data-bs-toggle="modal" data-bs-target="#editVendorModal"
+                            onclick="fillEditVendorModal(this)">
+                        تعديل
+                    </button>
+
+                    <button class="btn btn-primary btn-sm me-1"
+                            data-id="@item.Id"
+                            data-name="@item.Name"
+                            data-bs-toggle="modal" data-bs-target="#detailsVendorModal"
+                            onclick="fillDetailsVendorModal(this)">
+                        عرض
+                    </button>
+
+                    <button class="btn btn-danger btn-sm"
+                            data-id="@item.Id"
+                            data-name="@item.Name"
+                            data-bs-toggle="modal" data-bs-target="#deleteVendorModal"
+                            onclick="fillDeleteVendorModal(this)">
+                        حذف
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<!-- مودال إضافة مورد -->
+<div class="modal fade" id="addVendorModal" tabindex="-1" aria-labelledby="addVendorModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="Create" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addVendorModalLabel">إضافة مورد جديد</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="addVendorName" class="form-label">اسم المورد</label>
+                        <input type="text" class="form-control" id="addVendorName" name="Name" required />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-success">إضافة</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- مودال تعديل مورد -->
+<div class="modal fade" id="editVendorModal" tabindex="-1" aria-labelledby="editVendorModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="Edit" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editVendorModalLabel">تعديل المورد</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="editVendorId" name="id" />
+                    <div class="mb-3">
+                        <label for="editVendorName" class="form-label">اسم المورد</label>
+                        <input type="text" class="form-control" id="editVendorName" name="Name" required />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-warning">حفظ التعديلات</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- مودال عرض تفاصيل مورد -->
+<div class="modal fade" id="detailsVendorModal" tabindex="-1" aria-labelledby="detailsVendorModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="detailsVendorModalLabel">تفاصيل المورد</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>الرقم:</strong> <span id="detailsVendorId"></span></p>
+                <p><strong>اسم المورد:</strong> <span id="detailsVendorName"></span></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">إغلاق</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- مودال حذف مورد -->
+<div class="modal fade" id="deleteVendorModal" tabindex="-1" aria-labelledby="deleteVendorModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="Delete" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteVendorModalLabel">تأكيد الحذف</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="deleteVendorId" name="id" />
+                    <p>هل أنت متأكد من حذف المورد: <strong id="deleteVendorName"></strong>؟</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-danger">نعم، حذف</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- جافاسكريبت لتعبئة المودلات -->
+<script>
+    function fillEditVendorModal(button) {
+        document.getElementById('editVendorId').value = button.dataset.id;
+        document.getElementById('editVendorName').value = button.dataset.name;
+    }
+
+    function fillDetailsVendorModal(button) {
+        document.getElementById('detailsVendorId').textContent = button.dataset.id;
+        document.getElementById('detailsVendorName').textContent = button.dataset.name;
+    }
+
+    function fillDeleteVendorModal(button) {
+        document.getElementById('deleteVendorId').value = button.dataset.id;
+        document.getElementById('deleteVendorName').textContent = button.dataset.name;
+    }
+</script>

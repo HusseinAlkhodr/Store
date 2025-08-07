@@ -1,0 +1,30 @@
+﻿@model Store.DTO.LoginDTO
+
+@{
+    ViewData["Title"] = "تسجيل الدخول";
+}
+<div class="d-flex justify-content-center align-items-center vh-100">
+    <div class="card p-4 shadow" style="width: 100%; max-width: 400px;">
+        <h3 class="text-center mb-4">تسجيل الدخول</h3>
+        <form asp-action="Login" method="post">
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label">البريد الالكتروني</label>
+                <input asp-for="Email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Password" class="form-label">كلمة المرور</label>
+                <input asp-for="Password" class="form-control" />
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+            <div class="form-check mb-3">
+                <input asp-for="RememberMe" class="form-check-input" />
+                <label asp-for="RememberMe" class="form-check-label">تذكرني</label>
+            </div>
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary">تسجيل الدخول</button>
+                @* <a href="/Account/Signup" class="btn btn-outline-primary">إنشاء حساب</a> *@
+            </div>
+        </form>
+    </div>
+</div>

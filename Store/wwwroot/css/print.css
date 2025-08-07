@@ -1,0 +1,71 @@
+﻿@media print {
+    /* إخفاء كل شيء ما عدا الفاتورة */
+    body * {
+        visibility: hidden;
+    }
+
+    #posPrint, #posPrint * {
+        visibility: visible;
+    }
+
+    #posPrint {
+        position: absolute;
+        right: 0; /* يبقي العنصر ملاصقاً لليمين */
+        top: 0;
+        direction: rtl;
+        width: 80mm;
+        padding: 5mm;
+        margin-right: 0; /* ← أضف هذه */
+        background: white;
+        font-size: 12px;
+        line-height: 1.4;
+        font-family: Tahoma, sans-serif;
+        text-align: right;
+    }
+
+
+
+        #posPrint table {
+            width: 100%;
+            text-align: center !important;
+            border-collapse: collapse;
+            align-content: center;
+            align-items: center;
+        }
+        #posPrint thead th {
+            text-align: center !important;
+            padding: 0;
+            font-size: 11px;
+            white-space: nowrap;
+            vertical-align: middle;
+        }
+
+        #posPrint tbody td {
+            text-align: center !important;
+            padding: 2px 0;
+            font-size: 11px;
+            white-space: normal;
+        }
+        #posPrint hr {
+            border: 0;
+            border-top: 1px dashed #000;
+            margin: 5px 0;
+        }
+        #posPrint thead th.total {
+            text-align: right !important;
+            padding: 0;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+        #posPrint tbody td.total {
+            text-align: right !important;
+            padding: 2px 0;
+            font-size: 11px;
+            white-space: normal;
+        }
+
+    /* إخفاء زر الطباعة أثناء الطباعة */
+    button, .btn, .input-row, form, .modal, .navbar, .footer {
+        display: none !important;
+    }
+}

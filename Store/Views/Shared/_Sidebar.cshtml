@@ -1,0 +1,83 @@
+﻿<div class="accordion" id="sidebarAccordion" dir="rtl">
+    <!-- فاتورة جديدة -->
+    <div class="accordion-item rounded mb-2">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed bg-transparent " type="button" data-bs-toggle="collapse" data-bs-target="#collapseInvoice">
+                فاتورة جديدة
+            </button>
+        </h2>
+        <div id="collapseInvoice" class="accordion-collapse collapse" data-bs-parent="#sidebarAccordion">
+            <div class="accordion-body">
+                <a class="nav-link bg-light mb-1 rounded px-2" asp-controller="SaleBill" asp-action="AddSaleBill">بيع</a>
+                <a class="nav-link bg-light mb-1 rounded px-2" asp-controller="PurchaseBill" asp-action="AddPurchaseBill">شراء</a>
+            </div>
+        </div>
+    </div>
+    <!-- المواد -->
+    <div class="accordion-item rounded mb-2">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed bg-transparent " type="button" data-bs-toggle="collapse" data-bs-target="#collapseMaterials">
+                المواد
+            </button>
+        </h2>
+        <div id="collapseMaterials" class="accordion-collapse collapse" data-bs-parent="#sidebarAccordion">
+            <div class="accordion-body">
+                <a class="nav-link bg-light mb-1 rounded px-2" asp-controller="Item" asp-action="Index">عرض المواد</a>
+                <a class="nav-link bg-light rounded px-2" asp-controller="Item" asp-action="Create">إضافة مادة</a>
+            </div>
+        </div>
+    </div>
+    <!-- الأقسام -->
+    <div class="accordion-item rounded mb-2">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed bg-transparent " type="button" data-bs-toggle="collapse" data-bs-target="#collapseSections">
+                الأقسام
+            </button>
+        </h2>
+        <div id="collapseSections" class="accordion-collapse collapse" data-bs-parent="#sidebarAccordion">
+            <div class="accordion-body">
+                <a class="nav-link bg-light mb-1 rounded px-2" asp-controller="Division" asp-action="Index">عرض الأقسام</a>
+            </div>
+        </div>
+    </div>
+    <!-- الموردون -->
+    <div class="accordion-item rounded mb-2">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed bg-transparent " type="button" data-bs-toggle="collapse" data-bs-target="#collapseSuppliers">
+                الموردون
+            </button>
+        </h2>
+        <div id="collapseSuppliers" class="accordion-collapse collapse" data-bs-parent="#sidebarAccordion">
+            <div class="accordion-body">
+                <a class="nav-link bg-light mb-1 rounded px-2" asp-controller="Vendor" asp-action="Index">عرض الموردون</a>
+            </div>
+        </div>
+    </div>
+    <!-- الانواع -->
+    <div class="accordion-item rounded mb-2">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed bg-transparent " type="button" data-bs-toggle="collapse" data-bs-target="#collapseTypes">
+                الانواع
+            </button>
+        </h2>
+        <div id="collapseTypes" class="accordion-collapse collapse" data-bs-parent="#sidebarAccordion">
+            <div class="accordion-body">
+                <a class="nav-link bg-light mb-1 rounded px-2" asp-controller="ItemType" asp-action="Index">عرض الانواع</a>
+            </div>
+        </div>
+    </div>
+    <div class="accordion-item rounded mb-2">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed bg-transparent " type="button" data-bs-toggle="collapse" data-bs-target="#collapseAccount">
+                المستخدمين
+            </button>
+        </h2>
+        <div id="collapseAccount" class="accordion-collapse collapse" data-bs-parent="#sidebarAccordion">
+            <div class="accordion-body">
+                <a class="nav-link bg-light mb-1 rounded px-2" asp-controller="Account" asp-action="AddUser">اضافة مستخدم</a>
+                <a class="nav-link bg-light mb-1 rounded px-2" asp-controller="Account" asp-action="Index">عرض المستخدمين</a>
+
+            </div>
+        </div>
+    </div>
+</div>

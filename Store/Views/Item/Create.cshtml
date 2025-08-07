@@ -1,0 +1,60 @@
+﻿@model Store.DTO.AddItemDTO
+
+@{
+    ViewData["Title"] = "تعريف مادة";
+    Layout = "~/Views/Shared/_Layout.cshtml"; // تأكد أنك تستخدم Layout مناسب
+}
+
+<h2 class="mb-4 text-primary">🛒 تعريف مادة جديدة</h2>
+<hr />
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <form asp-action="Create" class="border p-4 rounded shadow bg-light">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            <div class="mb-3">
+                <label asp-for="Code" class="form-label">الباركود</label>
+                <input asp-for="Code" class="form-control" />
+                <span asp-validation-for="Code" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Description" class="form-label">اسم المادة</label>
+                <input asp-for="Description" class="form-control" />
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+
+            <input type="hidden" asp-for="Cost" value="0" />
+            <input type="hidden" asp-for="Price" value="0" />
+            <input type="hidden" asp-for="Qty" value="0" />
+
+            <div class="mb-3">
+                <label asp-for="DivisionId" class="form-label">القسم</label>
+                <select asp-for="DivisionId" class="form-select" asp-items="@(ViewBag.Divisions as List<SelectListItem>)">
+                    <option value="">-- اختر القسم --</option>
+                </select>
+                <span asp-validation-for="DivisionId" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="VendorId" class="form-label">المورد</label>
+                <select asp-for="VendorId" class="form-select" asp-items="@(ViewBag.Vendors as List<SelectListItem>)">
+                    <option value="">-- اختر المورد --</option>
+                </select>
+                <span asp-validation-for="VendorId" class="text-danger"></span>
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+                <button type="submit" class="btn btn-primary px-4">✔️ إنشاء</button>
+                <a asp-action="Index" class="btn btn-secondary">↩️ العودة إلى القائمة</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

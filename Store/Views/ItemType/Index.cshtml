@@ -1,0 +1,252 @@
+﻿@model IEnumerable<Store.DTO.GetItemTypeDTO>
+@{
+    ViewData["Title"] = "أنواع المواد";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="text-primary">@ViewData["Title"]</h2>
+        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addTypeModal">
+            <i class="bi bi-plus-circle"></i> إضافة نوع جديد
+        </button>
+    </div>
+
+    <table class="table table-bordered table-striped table-hover shadow-sm">
+        <thead class="table-light">
+            <tr>
+                <th>#</th>
+                <th>الاسم</th>
+                <th>الكمية</th>
+                <th class="text-center">إجراءات</th>
+            </tr>
+        </thead>
+        <tbody>@{
+                int i = 1;
+            }
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@i</td>
+                    <td>@item.Name</td>
+                    <td>@item.QTY</td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-primary me-1"
+                                data-id="@item.Id"
+                                data-name="@item.Name"
+                                data-qty="@item.QTY"
+                                data-bs-toggle="modal"
+                                data-bs-target="#editModal"
+                                onclick="fillEditModal(this)">
+                            تعديل
+                        </button>
+
+                        <button class="btn btn-sm btn-info me-1 text-white"
+                                data-id="@item.Id"
+                                data-name="@item.Name"
+                                data-qty="@item.QTY"
+                                data-created="@item.CreatedAt"
+                                data-bs-toggle="modal"
+                                data-bs-target="#detailsModal"
+                                onclick="fillDetailsModal(this)">
+                            تفاصيل
+                        </button>
+
+                        <button class="btn btn-sm btn-danger"
+                                data-id="@item.Id"
+                                data-name="@item.Name"
+                                data-bs-toggle="modal"
+                                data-bs-target="#deleteModal"
+                                onclick="fillDeleteModal(this)">
+                            حذف
+                        </button>
+                    </td>
+                </tr>
+                i++;
+            }
+        </tbody>
+    </table>
+</div>
+<!-- ✅ مودال التعديل -->
+<div class="modal fade" id="addModal" tabindex="-1" aria-labelledby="addModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addModalLabel">تعديل النوع</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">الاسم</label>
+                    <input class="form-control" id="addName" required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">الكمية</label>
+                    <input type="number" class="form-control" id="addQTY" required min="1" />
+                </div>
+                <div id="editError" class="text-danger"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-primary" onclick="submitAdd()">حفظ</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- ✅ مودال التعديل -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalLabel">تعديل النوع</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editId" />
+                <div class="mb-3">
+                    <label class="form-label">الاسم</label>
+                    <input class="form-control" id="editName" required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">الكمية</label>
+                    <input type="number" class="form-control" id="editQTY" required min="1" />
+                </div>
+                <div id="editError" class="text-danger"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-primary" onclick="submitEdit()">حفظ التعديلات</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- ✅ مودال التفاصيل -->
+<div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="detailsModalLabel">تفاصيل النوع</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>الاسم:</strong> <span id="detailsName"></span></p>
+                <p><strong>الكمية:</strong> <span id="detailsQTY"></span></p>
+                <p><strong>تاريخ الإضافة:</strong> <span id="detailsCreated"></span></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- ✅ مودال الحذف -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">تأكيد الحذف</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="deleteId" />
+                <p>هل أنت متأكد من حذف النوع: <strong id="deleteName"></strong>؟</p>
+                <div id="deleteError" class="text-danger"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-danger" onclick="submitDelete()">نعم، احذف</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ✅ JavaScript -->
+<script>
+    function fillEditModal(button) {
+        document.getElementById("editId").value = button.dataset.id;
+        document.getElementById("editName").value = button.dataset.name;
+        document.getElementById("editQTY").value = button.dataset.qty;
+    }
+
+    function fillDetailsModal(button) {
+        document.getElementById("detailsName").textContent = button.dataset.name;
+        document.getElementById("detailsQTY").textContent = button.dataset.qty;
+        document.getElementById("detailsCreated").textContent = button.dataset.created;
+    }
+
+
+    async function submitEdit() {
+        const id = document.getElementById("editId").value;
+        const name = document.getElementById("editName").value.trim();
+        const qty = parseInt(document.getElementById("editQTY").value);
+
+        if (!name || isNaN(qty) || qty < 1) {
+            document.getElementById("editError").innerText = "يرجى إدخال اسم صحيح وكمية أكبر من 0.";
+            return;
+        }
+
+        const response = await fetch(`/ItemType/Edit?id=${id}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                Name: name,    // لازم يكون موجود
+                QTY: qty       // لازم يكون رقم صحيح
+            })
+        });
+
+        if (response.ok) {
+            location.reload();
+        } else {
+            const msg = await response.text();
+            document.getElementById("editError").innerText = msg || "حدث خطأ أثناء التعديل.";
+        }
+    }
+
+    function fillDeleteModal(button) {
+        document.getElementById("deleteId").value = button.dataset.id;
+        document.getElementById("deleteName").innerText = button.dataset.name;
+        document.getElementById("deleteError").innerText = "";
+    }
+
+    async function submitDelete() {
+        const id = document.getElementById("deleteId").value;
+
+        const response = await fetch(`/ItemType/Delete?id=${id}`, {
+            method: 'POST'
+        });
+
+        if (response.ok) {
+            location.reload();
+        } else {
+            const msg = await response.text();
+            document.getElementById("deleteError").innerText = msg || "حدث خطأ أثناء الحذف.";
+        }
+    }
+
+    async function submitAdd() {
+        const name = document.getElementById("addName").value.trim();
+        const qty = parseInt(document.getElementById("addQTY").value);
+
+        if (!name || isNaN(qty) || qty < 1) {
+            document.getElementById("editError").innerText = "يرجى إدخال اسم صحيح وكمية أكبر من 0.";
+            return;
+        }
+
+        const response = await fetch(`/ItemType/Add`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                Name: name,    // لازم يكون موجود
+                QTY: qty       // لازم يكون رقم صحيح
+            })
+        });
+
+        if (response.ok) {
+            location.reload();
+        } 
+        else {
+            const msg = await response.text();
+            document.getElementById("editError").innerText = msg || "حدث خطأ أثناء التعديل.";
+        }
+    }
+</script>

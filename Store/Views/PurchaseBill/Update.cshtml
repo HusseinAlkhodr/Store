@@ -1,0 +1,555 @@
+﻿@model Store.DTO.GetPurchaseBillUpdateDTO
+
+@{
+    ViewData["Title"] = "تعديل فاتورة شراء";
+}
+<h1>@ViewData["Title"]</h1>
+
+<hr />
+<form id="SaleEditForm" onsubmit="return false;">
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <label for="payType" class="form-label">نوع الدفع</label>
+            <select class="form-select" id="payType" name="payType">
+                <option value="0">سوري</option>
+                <option value="1">دولار</option>
+            </select>
+        </div>
+        <div class="col-md-8">
+            <label for="customerName" class="form-label">اسم المصدر</label>
+            <input type="text" class="form-control" id="customerName" name="customerName" value="@Model.SourceName" readonly />
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label class="form-label">تمت بواسطة:</label>
+            <input type="text" class="form-control" value="@Model.CreatedBy" readonly />
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">تاريخ الإنشاء:</label>
+            <input type="text" class="form-control" value="@Model.CreatedAt" readonly />
+        </div>
+    </div>
+
+    <table class="table table-bordered text-center align-middle" id="invoiceTable" >
+        <thead class="table-dark">
+            <tr>
+                <th>الباركود</th>
+                <th>الوصف</th>
+                <th>النوع</th>
+                <th>السعر</th>
+                <th>الكمية</th>
+                <th>الإجمالي</th>
+                <th>العمليات</th>
+            </tr>
+        </thead>
+        <tbody id="invoiceBody">
+
+            <tr id="inputRow">
+                <td id="Id" hidden></td>
+                <td class="d-flex gap-1">
+                    <input type="text" class="form-control" id="inputBarcode" placeholder="ادخل الباركود" onkeydown="handleBarcodeKey(event)" onmouseover="updateTooltip(this)" />
+                    <button type="button" id="inputSearch" class="btn btn-outline-secondary" onclick="openSearchModal()" onmouseover="updateTooltip(this)">🔍</button>
+                </td>
+                <td><input type="text" class="form-control" id="inputDescription" readonly /></td>
+                <td>
+                    <select class="form-select" id="inputType" onchange="updateInputTotal()">
+                        <!-- سيتم ملؤها لاحقًا -->
+                    </select>
+                </td>
+                <td><input type="number" class="form-control" id="inputPrice" onchange="updateInputTotal()" min="0" /></td>
+                <td><input type="number" class="form-control" id="inputQty" value="1" min="1" onchange="updateInputTotal()" /></td>
+                <div id="qtyWarning" class="text-danger small" style="display:none">الكمية المطلوبة تتجاوز الكمية المتوفرة!</div>
+                <td><input type="number" class="form-control" id="inputTotal" readonly /></td>
+                <td><button type="button" class="btn btn-success" onclick="confirmItem()">✔</button></td>
+            </tr>
+
+            @foreach (var item in Model.Items)
+            {
+                <tr class="data-row"
+                    data-itemid="@item.ItemId"
+                    data-typeid="@item.TypeId"
+                    data-qty="@item.QTY"
+                    data-price="@item.ItemCost"
+                    data-barcode="@item.Code"
+                    data-type="@item.ItemType">
+                    <td>@item.Code</td>
+                    <td>@item.ItemDescription</td>
+                    <td class="type-cell">@item.ItemType.Name</td>
+                    <td><input type="number" class="form-control price-input" value="@item.ItemCost" min="0" onchange="updateRowTotal(this)" /></td>
+                    <td><input type="number" class="form-control qty-input" value="@item.QTY" min="1" onchange="updateRowTotal(this)" /></td>
+                    <td><span class="total-cell">0.00</span></td>
+                    <td><button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">🗑</button></td>
+                </tr>
+            }
+
+        </tbody>
+    </table>
+
+    <div class="d-flex justify-content-end mt-3">
+        <h5>إجمالي الفاتورة: <span id="invoiceTotal">0.00</span><span id="invoiceCurrency"> ل.س</span></h5>
+    </div>
+
+    <button type="button" class="btn btn-primary" onclick="submitUpdate()">تعديل الفاتورة</button>
+    <a asp-action="Index" class="btn btn-secondary">العودة إلى القائمة</a>
+
+    <!-- Modal -->
+    <div class="modal fade" id="searchModal" tabindex="-1" aria-labelledby="searchModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="searchModalLabel">بحث عن مادة</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="text" class="form-control mb-3" id="searchInput" placeholder="اكتب اسم المادة واضغط Enter" />
+                    <div id="searchResults" class="list-group"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</form>
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        let itemTypes = [];
+        let rate = 0;
+        window.addEventListener("DOMContentLoaded", async () => {
+
+            const res1 = await fetch("/Home/GetRate");
+            rate = await res1.json();
+            
+            await loadItemTypes();
+            document.querySelectorAll(".data-row").forEach(row => {
+                const priceInput = row.querySelector(".price-input");
+                updateRowTotal(priceInput);
+            });
+
+            const payType = document.getElementById("payType");
+            const invoiceCurrency = document.getElementById("invoiceCurrency");
+
+            payType.addEventListener("change", () => {
+                if (payType.value) {
+                    
+                    payType.disabled = true;
+                    const selectedText = payType.options[payType.selectedIndex].text;
+                    invoiceCurrency.innerText = selectedText === "سوري" ? " ل.س" : " $";
+                    if (selectedText === "دولار") {
+                        document.querySelectorAll(".data-row").forEach(row => {
+                                const priceInput = row.querySelector(".price-input");
+                                if (priceInput) {
+                                    const oldPrice = parseFloat(priceInput.value);
+                                    if (!isNaN(oldPrice) && rate > 0) {
+                                        const newPrice = oldPrice / rate;
+                                        priceInput.value = newPrice.toFixed(2);
+                                        updateRowTotal(priceInput);  // تحديث الإجمالي للصف
+                                    }
+                                }
+                        });
+                    }
+                }
+            });
+        });
+
+        async function loadItemTypes() {
+            try {
+                const res = await fetch("/ItemType/GetList");
+                if (!res.ok) {
+                    alert("فشل التحميل: " + res.status);
+                    return;
+                }
+
+                itemTypes = await res.json();
+                loadTypesToSelect();
+                fillRowsSelects();
+                calculateInvoiceTotal();
+            } catch (err) {
+                alert("خطأ أثناء تحميل الأنواع: " + err.message);
+            }
+        }
+
+        function fillRowsSelects()
+        {
+            document.querySelectorAll(".data-row").forEach(row => {
+                const select = document.createElement("select");
+                select.className = "form-select type-select";
+                itemTypes.forEach(t => {
+                    const option = document.createElement("option");
+                    option.value = t.id;
+                    option.text = t.name;
+                    option.dataset.qty = t.qty;  // كمية النوع
+                    if (parseInt(row.dataset.typeid) === t.id) {
+                        option.selected = true;
+                        row.dataset.typeqty = t.qty; // حفظ كمية النوع في data attribute للصف
+                    }
+                    select.appendChild(option);
+                });
+
+                select.onchange = () => {
+                    const selectedOption = select.options[select.selectedIndex];
+                    row.dataset.typeid = selectedOption.value;
+                    row.dataset.typeqty = selectedOption.dataset.qty;
+                    updateRowTotal(select);
+                };
+
+                const typeCell = row.querySelector("td:nth-child(3)");
+                typeCell.innerHTML = "";
+                typeCell.appendChild(select);
+            });
+            document.querySelectorAll(".data-row").forEach(row => {
+                const priceInput = row.querySelector(".price-input");
+                updateRowTotal(priceInput);
+            });
+        }
+
+        function confirmItem() {
+            const barcode = document.getElementById("inputBarcode").value.trim();
+            const description = document.getElementById("inputDescription").value.trim();
+            const price = parseFloat(document.getElementById("inputPrice").value) || 0;
+            const qty = parseFloat(document.getElementById("inputQty").value) || 1;
+            const typeSelect = document.getElementById("inputType");
+            const typeId = typeSelect.value;
+            const typeQty = parseInt(typeSelect.options[typeSelect.selectedIndex].dataset.qty);
+            const typeName = typeSelect.options[typeSelect.selectedIndex].text;
+
+            if (!barcode || !description || price <= 0 || qty <= 0) {
+                alert("يرجى تعبئة جميع الحقول بشكل صحيح");
+                return;
+            }
+
+            const existingRow = [...document.querySelectorAll(".data-row")].find(row =>
+                row.dataset.barcode === barcode
+            );
+
+            if (existingRow) {
+                const oldTypeQty = parseInt(existingRow.dataset.typeqty);
+                const oldQty = parseFloat(existingRow.dataset.qty);
+
+                const newQty = qty;
+                const newTypeQty = typeQty;
+                const newprice = price;
+
+                const totalUnits = (oldQty * oldTypeQty) + (newQty * newTypeQty);
+
+                let maxTypeQty = Math.max(oldTypeQty, newTypeQty);
+                let minTypeQty = Math.min(oldTypeQty, newTypeQty);
+
+                let isDivisibleByMax = totalUnits % maxTypeQty === 0;
+
+                let unifiedTypeQty, unifiedTypeName, unifiedTypeId;
+
+                if (isDivisibleByMax) {
+                    unifiedTypeQty = maxTypeQty;
+                    unifiedTypeName = (oldTypeQty >= newTypeQty) ? existingRow.querySelector("td:nth-child(3)").innerText : typeName;
+                    unifiedTypeId = (oldTypeQty >= newTypeQty) ? existingRow.dataset.typeid : typeId;
+                } else {
+                    unifiedTypeQty = minTypeQty;
+                    unifiedTypeName = (oldTypeQty <= newTypeQty) ? existingRow.querySelector("td:nth-child(3)").innerText : typeName;
+                    unifiedTypeId = (oldTypeQty <= newTypeQty) ? existingRow.dataset.typeid : typeId;
+                }
+
+                const unifiedQty = totalUnits / unifiedTypeQty;
+                const totalprice = newprice * totalUnits;
+
+                // تحديث واجهة المستخدم - الإبقاء على الـ select
+                const typeCell = existingRow.querySelector("td:nth-child(3)");
+                const select = document.createElement("select");
+                select.className = "form-select type-select";
+
+                itemTypes.forEach(t => {
+                    const option = document.createElement("option");
+                    option.value = t.id;
+                    option.text = t.name;
+                    option.dataset.qty = t.qty;
+
+                    if (parseInt(unifiedTypeId) === t.id) {
+                        option.selected = true;
+                    }
+
+                    select.appendChild(option);
+                });
+
+                // عند تغيير النوع في الصف
+                select.onchange = () => {
+                    const selectedOption = select.options[select.selectedIndex];
+                    existingRow.dataset.typeid = selectedOption.value;
+                    existingRow.dataset.typeqty = selectedOption.dataset.qty;
+                    updateRowTotal(select);
+                };
+
+                typeCell.innerHTML = ""; // تنظيف الخلية
+                typeCell.appendChild(select); // إعادة إرفاق الـ select
+
+
+                existingRow.querySelector(".qty-input").value = unifiedQty;
+                existingRow.querySelector(".price-input").value = newprice;
+                existingRow.querySelector(".total-cell").textContent = totalprice.toFixed(2);
+
+                // تحديث البيانات الداخلية
+                existingRow.dataset.itemid = barcode;
+                existingRow.dataset.typeid = unifiedTypeId;
+                existingRow.dataset.typeqty = unifiedTypeQty;
+                existingRow.dataset.qty = unifiedQty;
+                existingRow.dataset.price = newprice;
+                existingRow.dataset.total = totalprice.toFixed(2);
+
+                calculateInvoiceTotal();
+            } else {
+                // إنشاء صف جديد
+                const tr = document.createElement("tr");
+                tr.classList.add("data-row");
+                tr.dataset.itemid = barcode;
+                tr.dataset.typeid = typeId;
+                tr.dataset.qty = qty;
+                tr.dataset.price = price;
+                tr.dataset.typeqty = typeQty;
+                tr.dataset.barcode = barcode;
+                tr.dataset.total = price * qty * typeQty;
+
+                tr.innerHTML = `
+                    <td>${barcode}</td>
+                    <td>${description}</td>
+                    <td class="type-cell">${typeName}</td>
+                    <td><input type="number" class="form-control price-input" value="${price}" min="0" onchange="updateRowTotal(this)" /></td>
+                    <td><input type="number" class="form-control qty-input" value="${qty}" min="1" onchange="updateRowTotal(this)" /></td>
+                    <td class="total-cell">${(price * qty * typeQty).toFixed(2)}</td>
+                    <td><button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">🗑</button></td>
+                `;
+
+                document.getElementById("invoiceBody").appendChild(tr);
+                fillRowsSelects(); // إعادة ملء الـ select في الصف الجديد
+                calculateInvoiceTotal();
+            }
+
+            clearInputRow();
+        }
+
+        function loadTypesToSelect() {
+            const select = document.getElementById("inputType");
+            select.innerHTML = "";
+            itemTypes.forEach(t => {
+                const option = document.createElement("option");
+                option.value = t.id;
+                option.text = t.name;
+                option.dataset.qty = t.qty;
+                select.appendChild(option);
+            });
+        }
+
+        function updateRowTotal(element) {
+            const row = element.closest("tr");
+            const priceInput = row.querySelector(".price-input");
+            const qtyInput = row.querySelector(".qty-input");
+            const select = row.querySelector("select.type-select");
+            const totalCell = row.querySelector(".total-cell");
+
+            const price = parseFloat(priceInput.value) || 0;
+            const qty = parseFloat(qtyInput.value) || 0;
+            const typeQty = parseFloat(row.dataset.typeqty) || 1;
+
+            const total = price * qty * typeQty;
+
+            totalCell.textContent = total.toFixed(2);
+
+            // تحديث البيانات في dataset
+            row.dataset.price = price;
+            row.dataset.qty = qty;
+            row.dataset.total = total.toFixed(2);
+
+            calculateInvoiceTotal();
+        }
+
+        function updateInputTotal()
+        {
+            const price = parseFloat(document.getElementById("inputPrice").value) || 0;
+            const qty = parseInt(document.getElementById("inputQty").value) || 1;
+            const typeQty = parseInt(document.getElementById("inputType").selectedOptions[0]?.dataset.qty) || 1;
+            const total = price * qty * typeQty;
+            document.getElementById("inputTotal").value = total.toFixed(2);
+        }
+
+        function removeRow(button)
+        {
+            const row = button.closest("tr");
+            row.remove();
+            calculateInvoiceTotal();
+        }
+
+        function clearInputRow()
+        {
+            document.getElementById("inputBarcode").value = "";
+            document.getElementById("inputDescription").value = "";
+            document.getElementById("inputPrice").value = "";
+            document.getElementById("inputQty").value = "1";
+            document.getElementById("inputTotal").value = "";
+            document.getElementById("inputType").selectedIndex = 0;
+        }
+
+        function calculateInvoiceTotal() {
+            let total = 0;
+            document.querySelectorAll(".data-row").forEach(row => {
+                total += parseFloat(row.dataset.total) || 0;
+            });
+            document.getElementById("invoiceTotal").textContent = total.toFixed(2);
+        }
+
+        async function handleBarcodeKey(event) {
+            if (event.key === "Enter") {
+
+                const barcode = document.getElementById("inputBarcode").value;
+                const res = await fetch(`/Item/GetForPurchase?barcode=${barcode}`);
+
+                if (!res.ok) {
+                    alert("لم يتم العثور على المادة");
+                    return;
+                }
+                const data = await res.json();
+
+                currentItem = data;
+                document.getElementById("Id").value = data.id || 0
+                document.getElementById("inputDescription").value = data.description || "";
+                document.getElementById("inputPrice").value = data.cost || 0;
+                document.getElementById("inputQty").value = 1;
+                updateTotal();
+            }
+        }
+
+        function updateTotal()
+        {
+            const price = parseFloat(document.getElementById("inputPrice").value) || 0;
+            const qty = parseInt(document.getElementById("inputQty").value) || 1;
+            const typeQty = parseInt(document.getElementById("inputType").selectedOptions[0]?.dataset.qty) || 1;
+
+            const total = price * qty * typeQty;
+            document.getElementById("inputTotal").value = total.toFixed(2);
+
+        }
+
+        async function submitUpdate() {
+            const payType = parseInt(document.getElementById("payType").value);
+            const customerName = document.getElementById("customerName").value;
+            const rows = document.querySelectorAll(".data-row");
+            const billId = @(@Model.Id);
+
+            if (!payType && payType !== 0) {
+                alert("يرجى اختيار نوع الدفع");
+                return;
+            }
+
+            if (rows.length === 0) {
+                alert("لا يمكن إرسال فاتورة فارغة");
+                return;
+            }
+
+            for (const row of rows) {
+                if (!row.dataset.itemid) {
+                    alert("يوجد صف بدون معرف مادة صالح");
+                    return;
+                }
+            }
+            const items = Array.from(rows).map(row => ({
+                ItemId: parseInt(row.dataset.itemid),
+                TypeId: parseInt(row.dataset.typeid),
+                QTY: parseInt(row.dataset.qty),
+                ItemCost: parseFloat(row.dataset.price)
+            }));
+            const invoiceDTO = {
+                payType: payType,
+                CustomerName: customerName || "test name",
+                Items: items
+            };
+            try {
+                const url = `/PurchaseBill/Update/${billId}`;
+                const response = await fetch(url, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(invoiceDTO)
+                });
+
+                if (response.ok) {
+                    alert("تم تعديل الفاتورة بنجاح");
+                    window.location.href = "/PurchaseBill/Index";
+                } else {
+                    const errorText = await response.text();
+                    console.error("فشل في حفظ الفاتورة:", errorText);
+                    alert("حدث خطأ أثناء الحفظ");
+                }
+            } catch (err) {
+                console.error("استثناء أثناء الحفظ:", err);
+                alert("حدث استثناء أثناء الاتصال بالسيرفر");
+            }
+
+        }
+
+        function openSearchModal() {
+            const searchInput = document.getElementById("searchInput");
+            const resultsContainer = document.getElementById("searchResults");
+
+            // تفريغ الحقول السابقة
+            searchInput.value = "";
+            resultsContainer.innerHTML = "";
+
+            // إظهار المودال
+            const modal = new bootstrap.Modal(document.getElementById("searchModal"));
+            modal.show();
+
+            searchInput.focus();
+
+            searchInput.onkeydown = async function (e) {
+                if (e.key === "Enter") {
+                    e.preventDefault();
+                    const query = searchInput.value.trim();
+                    if (!query)
+                        return;
+
+                    const res = await fetch(`/Item/GetPurchaseFromText?text=${encodeURIComponent(query)}`);
+                    if (!res.ok) {
+                        resultsContainer.innerHTML = `<div class="text-danger">حدث خطأ أثناء البحث</div>`;
+
+                        return;
+                    }
+
+                    const items = await res.json();
+                    if (!items.length) {
+                        resultsContainer.innerHTML = `<div class="text-muted">لا توجد نتائج</div>`;
+
+                        return;
+                    }
+
+                    resultsContainer.innerHTML = "";
+                    items.forEach(item => {
+                        const el = document.createElement("div");
+                        el.className = "list-group-item d-flex justify-content-between align-items-center";
+                        el.innerHTML = `
+                            <div>
+                                <strong>${item.code}</strong> - ${item.description} - ${item.cost}
+                            </div>
+                            <button type="button" class="btn btn-primary btn-sm">اختيار</button>
+                        `;
+
+
+                        // عند الضغط على زر "اختيار"
+                        el.querySelector("button").addEventListener("click", () => {
+                            document.getElementById("inputBarcode").value = item.code;
+                            document.getElementById("inputDescription").value = item.description;
+                            document.getElementById("inputPrice").value = item.cost;
+                            currentItem = item;
+                            bootstrap.Modal.getInstance(document.getElementById("searchModal")).hide();
+                            document.getElementById("inputBarcode").focus();
+                            updateTotal();
+                        });
+                        resultsContainer.appendChild(el);
+                    });
+                }
+            };
+
+        }
+
+    </script>
+}

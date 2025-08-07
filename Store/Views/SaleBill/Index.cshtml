@@ -1,0 +1,109 @@
+﻿@using Store.DTO
+@using Store.DTO.Pagination
+@model PagedList<GetSaleBillDTO>
+
+@functions {
+    public string BuildPageUrl(int page)
+    {
+        var query = System.Web.HttpUtility.ParseQueryString(Context.Request.QueryString.Value ?? string.Empty);
+        query["PageNumber"] = page.ToString();
+        return $"{Context.Request.Path}?{query}";
+    }
+}
+
+@{
+    ViewData["Title"] = "فواتير البيع";
+}
+
+<h1>فواتير المبيع</h1>
+
+<p style="margin:10px;">
+    <a class="btn btn-primary" asp-controller="SaleBill" asp-action="AddSaleBill">فاتورة جديدة</a>
+</p>
+
+<form method="get" class="row g-2 align-items-end mb-3">
+    <div class="col-md-3">
+        <label for="CustomerName" class="form-label">اسم الزبون</label>
+        <input type="text" name="CustomerName" id="CustomerName" value="@Context.Request.Query["CustomerName"]" class="form-control" />
+    </div>
+    <div class="col-md-3">
+        <label for="StartDate" class="form-label">من تاريخ</label>
+        <input type="date" name="StartDate" id="StartDate"
+               value="@(string.IsNullOrWhiteSpace(Context.Request.Query["StartDate"]) ? DateTime.Today.ToString("yyyy-MM-dd") : Context.Request.Query["StartDate"].ToString())"
+               class="form-control" />
+    </div>
+    <div class="col-md-3">
+        <label for="EndDate" class="form-label">إلى تاريخ</label>
+        <input type="date" name="EndDate" id="EndDate"
+               value="@(string.IsNullOrWhiteSpace(Context.Request.Query["EndDate"]) ? DateTime.Today.ToString("yyyy-MM-dd") : Context.Request.Query["EndDate"].ToString())"
+               class="form-control" />
+    </div>
+    <div class="col-md-3 d-flex align-items-end gap-2">
+        <button type="submit" class="btn btn-success btn-sm">بحث</button>
+        <a href="/SaleBill/Index" class="btn btn-secondary btn-sm">إعادة تعيين</a>
+    </div>
+</form>
+
+<table class="table table-bordered text-center align-middle">
+    <thead class="table-dark">
+        <tr>
+            <th>اسم الزبون</th>
+            <th>الاجمالي</th>
+            <th>تاريخ الانشاء</th>
+            <th>المنشئ</th>
+            <th>سعر الصرف في وقتها</th>
+            <th>العمليات</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model != null && Model.Items.Any())
+        {
+            foreach (var item in Model.Items)
+            {
+                <tr>
+                    <td>@item.CustomerName</td>
+                    <td>@item.Total.ToString("N0") ل.س</td>
+                    <td>@item.CreatedAt</td>
+                    <td>@item.CreatedBy</td>
+                    <td>@item.ExchangeRate</td>
+                    <td>
+                        <a asp-controller="SaleBill" asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info">عرض</a>
+                        <a asp-controller="SaleBill" asp-action="Update" asp-route-id="@item.Id" class="btn btn-sm btn-warning">تعديل</a>
+                        <a asp-controller="SaleBill" asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">حذف</a>
+                    </td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="6" class="text-center text-muted">لا توجد فواتير حالياً.</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (Model.TotalPages > 1)
+{
+    var pageQuery = Context.Request.Query["PageNumber"].ToString();
+    var currentPage = int.TryParse(pageQuery, out var page) ? page : 1;
+
+    <nav aria-label="Page navigation" class="d-flex justify-content-center mt-4">
+        <ul class="pagination">
+            <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                <a class="page-link" href="@BuildPageUrl(currentPage - 1)">السابق</a>
+            </li>
+
+            @for (int i = 1; i <= Model.TotalPages; i++)
+            {
+                <li class="page-item @(i == currentPage ? "active" : "")">
+                    <a class="page-link" href="@BuildPageUrl(i)">@i</a>
+                </li>
+            }
+
+            <li class="page-item @(currentPage == Model.TotalPages ? "disabled" : "")">
+                <a class="page-link" href="@BuildPageUrl(currentPage + 1)">التالي</a>
+            </li>
+        </ul>
+    </nav>
+}

@@ -1,0 +1,129 @@
+﻿@using Store.DTO
+@using Store.DTO.Pagination
+@model PagedList<GetSaledItem>
+
+@functions {
+    public string BuildPageUrl(int page)
+    {
+        var query = System.Web.HttpUtility.ParseQueryString(Context.Request.QueryString.Value ?? string.Empty);
+        query["PageNumber"] = page.ToString();
+        return $"{Context.Request.Path}?{query}";
+    }
+}
+
+@{
+    ViewData["Title"] = "العناصر المباعة";
+    decimal total = 0;
+}
+
+<h2 class="mb-3">العناصر المباعة</h2>
+
+<form method="get" class="row g-2 align-items-end mb-3">
+    <div class="col-md-2">
+        <label class="form-label">الكود</label>
+        <input type="text" name="Code" value="@Context.Request.Query["Code"]" class="form-control form-control-sm" />
+    </div>
+    <div class="col-md-2">
+        <label class="form-label">الوصف</label>
+        <input type="text" name="Description" value="@Context.Request.Query["Description"]" class="form-control form-control-sm" />
+    </div>
+    <div class="col-md-2">
+        <label class="form-label">القسم</label>
+        <input type="text" name="Division" value="@Context.Request.Query["Division"]" class="form-control form-control-sm" />
+    </div>
+    <div class="col-md-2">
+        <label class="form-label">المورد</label>
+        <input type="text" name="Vendor" value="@Context.Request.Query["Vendor"]" class="form-control form-control-sm" />
+    </div>
+    <div class="col-md-2">
+        <label class="form-label">من تاريخ</label>
+        <input type="date" name="StartDate"
+               value="@(string.IsNullOrWhiteSpace(Context.Request.Query["StartDate"]) ? DateTime.Today.ToString("yyyy-MM-dd") : Context.Request.Query["StartDate"].ToString())"
+               class="form-control form-control-sm" />
+    </div>
+    <div class="col-md-2">
+        <label class="form-label">إلى تاريخ</label>
+        <input type="date" name="EndDate"
+               value="@(string.IsNullOrWhiteSpace(Context.Request.Query["EndDate"]) ? DateTime.Today.ToString("yyyy-MM-dd") : Context.Request.Query["EndDate"].ToString())"
+               class="form-control form-control-sm" />
+    </div>
+    <div class="col-md-3 d-flex gap-2">
+        <button type="submit" class="btn btn-success btn-sm">بحث</button>
+        <a href="/SaleBill/GetSaleItem" class="btn btn-secondary btn-sm">إعادة تعيين</a>
+    </div>
+</form>
+
+<table class="table table-bordered table-hover text-center align-middle">
+    <thead class="table-dark">
+        <tr>
+            <th>الكود</th>
+            <th>الوصف</th>
+            <th>القسم</th>
+            <th>المورد</th>
+            <th>النوع</th>
+            <th>الكمية</th>
+            <th>السعر</th>
+            <th>الإجمالي</th>
+            <th>تاريخ البيع</th>
+            <th>الفاتورة كاملة</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model != null && Model.Items.Any())
+        {
+            foreach (var item in Model.Items)
+            {
+                <tr>
+                    <td>@item.Code</td>
+                    <td>@item.Description</td>
+                    <td>@item.Division</td>
+                    <td>@item.Vendor</td>
+                    <td>@item.Type</td>
+                    <td>@item.QTY</td>
+                    <td>@item.Price.ToString("N0") ل.س</td>
+                    <td>@item.Total.ToString("N0") ل.س</td>
+                    <td>@item.CreatedAt</td>
+                    <td><a href="/SaleBill/Details/@item.BillId" class="btn btn-secondary btn-sm">انتقال</a></td>
+                </tr>
+                total += item.Total;
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="10" class="text-muted">لا توجد عناصر مباعة حالياً.</td>
+            </tr>
+        }
+    </tbody>
+    <tfoot class="table-secondary fw-bold">
+        <tr>
+            <td colspan="2">المجموع الكلي</td>
+            <td colspan="8">@total ل.س</td>
+        </tr>
+    </tfoot>
+</table>
+
+@if (Model.TotalPages > 1)
+{
+    var pageQuery = Context.Request.Query["PageNumber"].ToString();
+    var currentPage = int.TryParse(pageQuery, out var page) ? page : 1;
+
+    <nav aria-label="Page navigation" class="d-flex justify-content-center mt-4">
+        <ul class="pagination">
+            <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                <a class="page-link" href="@BuildPageUrl(currentPage - 1)">السابق</a>
+            </li>
+
+            @for (int i = 1; i <= Model.TotalPages; i++)
+            {
+                <li class="page-item @(i == currentPage ? "active" : "")">
+                    <a class="page-link" href="@BuildPageUrl(i)">@i</a>
+                </li>
+            }
+
+            <li class="page-item @(currentPage == Model.TotalPages ? "disabled" : "")">
+                <a class="page-link" href="@BuildPageUrl(currentPage + 1)">التالي</a>
+            </li>
+        </ul>
+    </nav>
+}

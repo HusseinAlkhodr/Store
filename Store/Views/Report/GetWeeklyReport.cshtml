@@ -1,0 +1,83 @@
+﻿@using System.Globalization
+@model Store.DTO.SalesReport
+
+@{
+    ViewData["Title"] = "التقرير الاسبوعي للمبيعات";
+
+    var dateQuery = Context.Request.Query["StartDate"].ToString();
+    var defaultDate = string.IsNullOrEmpty(dateQuery) ? DateTime.Now.ToString("yyyy-MM-dd") : dateQuery;
+
+    var nameFilter = Context.Request.Query["Name"].ToString();
+    var startDateFilter = string.IsNullOrWhiteSpace(Context.Request.Query["StartDate"]) ? DateTime.Today.ToString("yyyy-MM-dd") : Context.Request.Query["StartDate"].ToString();
+
+    var parsedDate = DateTime.TryParse(defaultDate, out var tempDate) ? tempDate : DateTime.Now;
+}
+
+<h2 class="mb-4">@ViewData["Title"]</h2>
+
+<form method="get" asp-action="GetWeeklyReport" class="mb-4 border rounded p-3 bg-light">
+    <div class="row g-3 align-items-center">
+        <div class="col-md-3">
+            <label for="Name" class="form-label">اسم المادة:</label>
+            <input type="text" id="Name" name="Name" value="@nameFilter" class="form-control" placeholder="أدخل الاسم" />
+        </div>
+
+        <div class="col-md-3">
+            <label for="StartDate" class="form-label">التاريخ:</label>
+            <input type="date" id="StartDate" name="StartDate" value="@startDateFilter" class="form-control" />
+        </div>
+
+        <div class="col-md-3">
+            <label for="filter" class="form-label">&nbsp;</label>
+            <button id="filter" type="submit" class="btn btn-primary w-100">تصفية</button>
+        </div>
+        <div class="col-md-3">
+            <label for="rest" class="form-label">&nbsp;</label>
+            <a asp-action="GetWeeklyReport" id="rest" class="btn btn-secondary w-100">اعادة تعيين</a>
+        </div>
+    </div>
+</form>
+
+@if (!Model.Sales.Any())
+{
+    <div class="alert alert-info">لا توجد بيانات لعرضها.</div>
+}
+else
+{
+    <table class="table table-bordered table-hover table-striped text-center align-middle">
+        <thead class="table-dark">
+            <tr>
+                <th>#</th>
+                <th>الوصف</th>
+                <th>الكمية المباعة</th>
+                <th>الكمية المتبقية</th>
+                <th>الإجمالي (ل.س)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                int index = 1;
+            }
+            @foreach (var item in Model.Sales)
+            {
+                <tr>
+                    <td>@index</td>
+                    <td>@item.Description</td>
+                    <td>@item.QTY</td>
+                    <td>@item.Rest</td>
+                    <td>@item.Total.ToString("N0")</td>
+                </tr>
+                index++;
+            }
+        </tbody>
+        <tfoot class="table-secondary fw-bold">
+            <tr>
+                <td colspan="2">المجموع الكلي</td>
+                <td>@Model.Total.ToString("N0")</td>
+                <td>@Model.Sales.Sum(x => x.Rest)</td>
+                <td>@Model.Total.ToString("N0") ل.س</td>
+            </tr>
+        </tfoot>
+    </table>
+
+}

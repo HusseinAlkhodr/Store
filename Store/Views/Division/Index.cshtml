@@ -1,0 +1,169 @@
+﻿@model IEnumerable<Store.DTO.GetDivisionDTO>
+
+@{
+    ViewData["Title"] = "قائمة الأقسام";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<!-- زر إضافة قسم جديد -->
+<p>
+    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addDivisionModal">
+        إضافة قسم جديد
+    </button>
+</p>
+
+<!-- جدول الأقسام -->
+<table class="table table-bordered table-striped">
+    <thead class="table-dark">
+        <tr>
+            <th>الرقم</th>
+            <th>الاسم</th>
+            <th class="text-center">الإجراءات</th>
+        </tr>
+    </thead>
+    <tbody>
+        @{
+            var i = 1;
+        }
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@(i++)</td>
+                <td>@item.Name</td>
+                <td class="text-center">
+                    <button class="btn btn-warning btn-sm me-1"
+                            data-id="@item.Id"
+                            data-name="@item.Name"
+                            data-bs-toggle="modal" data-bs-target="#editDivisionModal"
+                            onclick="fillEditDivisionModal(this)">
+                        تعديل
+                    </button>
+
+                    <button class="btn btn-primary btn-sm me-1"
+                            data-id="@item.Id"
+                            data-name="@item.Name"
+                            data-bs-toggle="modal" data-bs-target="#detailsDivisionModal"
+                            onclick="fillDetailsDivisionModal(this)">
+                        عرض
+                    </button>
+
+                    <button class="btn btn-danger btn-sm"
+                            data-id="@item.Id"
+                            data-name="@item.Name"
+                            data-bs-toggle="modal" data-bs-target="#deleteDivisionModal"
+                            onclick="fillDeleteDivisionModal(this)">
+                        حذف
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<!-- مودال إضافة قسم -->
+<div class="modal fade" id="addDivisionModal" tabindex="-1" aria-labelledby="addDivisionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="Create" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addDivisionModalLabel">إضافة قسم جديد</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="addDivisionName" class="form-label">اسم القسم</label>
+                        <input type="text" class="form-control" id="addDivisionName" name="Name" required />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-success">إضافة</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- مودال تعديل قسم -->
+<div class="modal fade" id="editDivisionModal" tabindex="-1" aria-labelledby="editDivisionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="Edit" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editDivisionModalLabel">تعديل القسم</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="editDivisionId" name="id" />
+                    <div class="mb-3">
+                        <label for="editDivisionName" class="form-label">اسم القسم</label>
+                        <input type="text" class="form-control" id="editDivisionName" name="Name" required />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-warning">حفظ التعديلات</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- مودال عرض تفاصيل قسم -->
+<div class="modal fade" id="detailsDivisionModal" tabindex="-1" aria-labelledby="detailsDivisionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="detailsDivisionModalLabel">تفاصيل القسم</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>الرقم:</strong> <span id="detailsDivisionId"></span></p>
+                <p><strong>اسم القسم:</strong> <span id="detailsDivisionName"></span></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">إغلاق</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- مودال حذف قسم -->
+<div class="modal fade" id="deleteDivisionModal" tabindex="-1" aria-labelledby="deleteDivisionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="Delete" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteDivisionModalLabel">تأكيد الحذف</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="deleteDivisionId" name="id" />
+                    <p>هل أنت متأكد من حذف القسم: <strong id="deleteDivisionName"></strong>؟</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-danger">نعم، حذف</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function fillEditDivisionModal(button) {
+        document.getElementById('editDivisionId').value = button.dataset.id;
+        document.getElementById('editDivisionName').value = button.dataset.name;
+    }
+
+    function fillDetailsDivisionModal(button) {
+        document.getElementById('detailsDivisionId').textContent = button.dataset.id;
+        document.getElementById('detailsDivisionName').textContent = button.dataset.name;
+    }
+
+    function fillDeleteDivisionModal(button) {
+        document.getElementById('deleteDivisionId').value = button.dataset.id;
+        document.getElementById('deleteDivisionName').textContent = button.dataset.name;
+    }
+</script>

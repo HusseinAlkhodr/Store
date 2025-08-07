@@ -1,0 +1,70 @@
+﻿@model Store.DTO.GetSaleBillDetailsForView
+
+@{
+    ViewData["Title"] = "تفاصيل الفاتورة";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4 text-center">تفاصيل فاتورة البيع المحذوفة</h2>
+
+    <div class="card mb-4 shadow">
+        <div class="card-body">
+
+            <div class="row mb-3">
+                <div class="col-sm-3 fw-bold">رقم الفاتورة:</div>
+                <div class="col-sm-3">@Model.Id</div>
+
+                <div class="col-sm-3 fw-bold">اسم الزبون:</div>
+                <div class="col-sm-3">@Model.CustomerName</div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-sm-3 fw-bold">تاريخ الإنشاء:</div>
+                <div class="col-sm-3">@Model.CreatedAt</div>
+
+                <div class="col-sm-3 fw-bold">أنشأها:</div>
+                <div class="col-sm-3">@Model.CreatedBy</div>
+            </div>
+
+            <div class="row mb-2">
+                <div class="col-sm-3 fw-bold">الإجمالي:</div>
+                <div class="col-sm-3">@Model.Total.ToString("N0") ل.س</div>
+
+                <div class="col-sm-3 fw-bold">سعر الصرف:</div>
+                <div class="col-sm-3">كل 1 دولار ب @Model.ExchangeRate ل.س</div>
+            </div>
+
+        </div>
+    </div>
+
+    <h4 class="mb-3">تفاصيل المواد</h4>
+    <table class="table table-bordered text-center table-hover shadow-sm">
+        <thead class="table-primary">
+            <tr>
+                <th>الباركود</th>
+                <th>الوصف</th>
+                <th>النوع</th>
+                <th>السعر الفردي</th>
+                <th>الكمية</th>
+                <th>الإجمالي</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.Items)
+            {
+                <tr>
+                    <td>@item.Code</td>
+                    <td>@item.ItemDescription</td>
+                    <td>@item.ItemType</td>
+                    <td>@item.ItemPrice.ToString("N0")</td>
+                    <td>@item.QTY</td>
+                    <td>@item.Total.ToString("N0")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="col-sm-6 d-flex justify-content-between">
+        <a asp-action="GetDeletedBill" class="btn btn-secondary">العودة إلى القائمة</a>
+    </div>
+</div>

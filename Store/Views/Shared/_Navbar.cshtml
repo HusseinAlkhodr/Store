@@ -1,0 +1,153 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using Store.Models.Authenitication
+@inject UserManager<Account> UserManager
+@{
+    var user = await UserManager.GetUserAsync(User);
+    var displayName = user?.FullName ?? User.Identity.Name;
+}
+<nav class="navbar navbar-expand-lg bg-light bg-body-tertiary d-flex justify-content-center">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">القلعة</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNavDropdown">
+            <ul class="navbar-nav">
+                <li class="nav-item"><a class="nav-link active" asp-controller="Home" asp-action="Index">الرئيسية</a></li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">فاتورة</a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" asp-controller="SaleBill" asp-action="AddSaleBill">فاتورة بيع</a></li>
+                        <li><a class="dropdown-item" asp-controller="PurchaseBill" asp-action="AddPurchaseBill">فاتورة شراء</a></li>
+                    </ul>
+                </li>
+                <li class="nav-item"><a class="nav-link" asp-controller="Item" asp-action="Index">المواد</a></li>
+                <li class="nav-item"><a class="nav-link" asp-controller="Division" asp-action="Index">الاقسام</a></li>
+                <li class="nav-item"><a class="nav-link" asp-controller="Vendor" asp-action="Index">الموردون</a></li>
+                <li class="nav-item"><a class="nav-link" asp-controller="Report" asp-action="Index">تقارير</a></li>
+            </ul>
+        </div>
+        <div>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTypeModal">
+                إضافة نوع جديد
+            </button>
+        </div>
+        <div>
+            <span> &nbsp; </span>
+        </div>
+        <div>
+            <form asp-controller="Home" asp-action="ChangeRate" method="post" class="d-flex" role="search">
+                @await Component.InvokeAsync("ExchangeRate")
+            </form>
+        </div>
+
+
+        <div>
+            <span> &nbsp; </span>
+        </div>
+        <div>
+            <ul class ="navbar-nav">
+                <li class="nav-item dropdown">
+                    <a class=" dropdown-toggle btn btn-success" href="#" role="button" data-bs-toggle="dropdown">
+                        @displayName
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item"  href="#">اعدادات الحساب</a></li>
+                        <li><a class="dropdown-item" asp-controller="Account" asp-action="Logout" >تسجيل خروج</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="modal fade" id="addTypeModal" tabindex="-1" aria-labelledby="addTypeModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="addTypeForm">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addTypeModalLabel">إضافة نوع جديد</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="typeName" class="form-label">اسم النوع</label>
+                        <input type="text" class="form-control" id="typeName" name="Name" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="typeQty" class="form-label">الكمية (QTY)</label>
+                        <input type="number" class="form-control" id="typeQty" name="QTY" required min="1" />
+                    </div>
+
+                    <div id="typeErrorMsg" class="alert alert-danger d-none" role="alert"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-success">إضافة</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+    function validateRate() {
+        const input = document.getElementById('rate');
+        const btn = document.getElementById('submitBtn');
+        const value = input.value.trim();
+
+        const isValidPositiveInteger = /^[1-9]\d*$/.test(value);
+        btn.disabled = !isValidPositiveInteger;
+
+        btn.disabled = !input.value || isNaN(input.value) || Number(input.value) <= 0;
+    }
+    document.getElementById("addTypeForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        const errorDiv = document.getElementById("typeErrorMsg");
+        errorDiv.classList.add("d-none"); // إخفاء الرسالة السابقة
+
+        const name = document.getElementById("typeName").value.trim();
+        const qtyStr = document.getElementById("typeQty").value.trim();
+        const qty = parseInt(qtyStr);
+
+        // تحقق من صحة البيانات
+        if (name === "") {
+            errorDiv.textContent = "يرجى إدخال اسم النوع.";
+            errorDiv.classList.remove("d-none");
+            return;
+        }
+
+        if (!/^\d+$/.test(qtyStr) || qty <= 0) {
+            errorDiv.textContent = "يرجى إدخال كمية صحيحة (عدد صحيح موجب).";
+            errorDiv.classList.remove("d-none");
+            return;
+        }
+
+        const data = { name: name, qty: qty };
+
+        fetch("/ItemType/Add", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(data)
+        })
+        .then(async res => {
+            if (res.ok) {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('addTypeModal'));
+                modal.hide();
+                location.reload();
+            } else {
+                const errorMsg = await res.text();
+                errorDiv.textContent = errorMsg;
+                errorDiv.classList.remove("d-none");
+            }
+        })
+        .catch(err => {
+            errorDiv.textContent = "حدث خطأ أثناء الإضافة: " + err.message;
+            errorDiv.classList.remove("d-none");
+        });
+    });
+</script>

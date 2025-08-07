@@ -1,0 +1,36 @@
+﻿@{
+    ViewData["Title"] = "التقارير";
+}
+
+<h2 class="mb-4">📊 التقارير</h2>
+
+<div class="row row-cols-1 row-cols-md-2 g-4">
+    <div class="col">
+        <div class="card border-primary h-100">
+            <div class="card-header bg-primary text-white fw-bold">تقارير المبيعات</div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li><a asp-action="GetDailyReport" asp-controller="Report" class="text-decoration-none">📅 تقرير المبيعات اليومية</a></li>
+                    <li><a asp-action="GetWeeklyReport" asp-controller="Report" class="text-decoration-none">🗓️ تقرير المبيعات الأسبوعية</a></li>
+                    <li><a asp-action="GetMonthlyReport" asp-controller="Report" class="text-decoration-none">📆 تقرير المبيعات الشهرية</a></li>
+                    <li><a asp-action="GetSaleItem" asp-controller="SaleBill" class="text-decoration-none">📦 العناصر المباعة</a></li>
+                    <li><a asp-action="Index" asp-controller="SaleBill" class="text-decoration-none">🧾 فواتير البيع</a></li>
+                    <li><a asp-action="GetDeletedBill" asp-controller="SaleBill" class="text-decoration-none">🧾  فواتير البيع المحذوفة</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="col">
+        <div class="card border-success h-100">
+            <div class="card-header bg-success text-white fw-bold">تقارير المشتريات</div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li><a asp-action="Index" asp-controller="PurchaseBill" class="text-decoration-none">🧾 فواتير الشراء</a></li>
+                    <li><a asp-action="GetDeletedBill" asp-controller="PurchaseBill" class="text-decoration-none">🧾 فواتير الشراء المحذوفة</a></li>
+                    <li><a asp-action="GetPurchaseItem" asp-controller="PurchaseBill" class="text-decoration-none">📦 العناصر المشتراة</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,73 @@
+﻿
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewData["Title"] - مركز القلعة</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    @RenderSection("Style", required: false)
+    <!-- Bootstrap محلي -->
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.rtl.min.css" />
+</head>
+<body class="d-flex flex-column min-vh-100">
+    <!-- القسم العلوي -->
+    @if (User.Identity.IsAuthenticated)
+    {
+            @await Html.PartialAsync("_Navbar")
+    }
+    <div class="toast-container position-fixed top-0 end-0 p-3">
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="toast align-items-center text-white bg-danger border-0 show" role="alert">
+                <div class="d-flex">
+                    <div class="toast-body">@TempData["ErrorMessage"]</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        }
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="toast align-items-center text-white bg-success border-0 show" role="alert">
+                <div class="d-flex">
+                    <div class="toast-body">@TempData["SuccessMessage"]</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        }
+    </div>
+    <!-- القسم الجانبي والمحتوى -->
+    <div class="container-fluid flex-grow-1 my-3">
+        <div class="row">
+            @if (User.Identity.IsAuthenticated)
+            {
+                <!-- الشريط الجانبي -->
+                <div class="col-md-3 col-lg-2 mb-3">
+                    @await Html.PartialAsync("_Sidebar")
+                </div>
+            }
+            <!-- المحتوى الرئيسي -->
+                <div class="col-md-9 col-lg-10">
+                    @RenderBody()
+                </div>
+        </div>
+    </div>
+
+    <!-- القسم السفلي -->
+    <footer class="bg-light text-center py-3 mt-auto border-top">
+        @await Html.PartialAsync("_Footer")
+    </footer>
+
+    <!-- Bootstrap JS محلي -->
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const toasts = document.querySelectorAll('.toast');
+        toasts.forEach(toast => {
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 5000);
+        });
+    </script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,254 @@
+﻿@model IEnumerable<Store.DTO.GetAccountDTO>
+@{
+    ViewData["Title"] = "المستخدمون";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="text-primary">قائمة المستخدمين</h2>
+        <a asp-action="AddUser" class="btn btn-success">
+            <i class="bi bi-plus-lg"></i> إضافة مستخدم جديد
+        </a>
+    </div>
+
+    <table class="table table-bordered table-hover text-center">
+        <thead class="table-dark">
+            <tr>
+                <th>الرقم</th>
+                <th>الاسم</th>
+                <th>الكنية</th>
+                <th>البريد الإلكتروني</th>
+                <th>الحالة</th>
+                <th>النوع</th>
+                <th>الإجراءات</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (!Model.Any())
+            {
+                <tr>
+                    <td colspan="7" class="text-center text-muted">لا يوجد مستخدمون.</td>
+                </tr>
+            }
+            else
+            {
+                int i = 1;
+                foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@i</td>
+                        <td>@item.FirstName</td>
+                        <td>@item.LastName</td>
+                        <td>@item.Email</td>
+                        <td>
+                            @if (item.Status.ToString() == "Active")
+                            {
+                                <span class="badge bg-success">مفعل</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">معطل</span>
+                            }
+                        </td>
+                        <td>
+                            @if (item.AccountType.ToString() == "Admin")
+                            {
+                                <span class="badge bg-info text-dark">مدير</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-light text-dark">مستخدم</span>
+                            }
+                        </td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-warning me-1"
+                                    data-id="@item.Id"
+                                    data-firstname="@item.FirstName"
+                                    data-lastname="@item.LastName"
+                                    data-email="@item.Email"
+                                    data-status="@item.Status"
+                                    data-accounttype="@item.AccountType"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#editUserModal"
+                                    onclick="fillEditUserModal(this)">
+                                <i class="bi bi-pencil-square">تعديل</i>
+                            </button>
+
+                            <button class="btn btn-sm btn-info text-white me-1"
+                                    data-id="@item.Id"
+                                    data-firstname="@item.FirstName"
+                                    data-lastname="@item.LastName"
+                                    data-email="@item.Email"
+                                    data-status="@item.Status"
+                                    data-accounttype="@item.AccountType"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#detailsUserModal"
+                                    onclick="fillDetailsUserModal(this)">
+                                <i class="bi bi-info-circle">تفاصيل</i>
+                            </button>
+
+                            <button class="btn btn-sm btn-danger"
+                                    data-id="@item.Id"
+                                    data-name="@($"{item.FirstName} {item.LastName}")"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#deleteUserModal"
+                                    onclick="fillDeleteUserModal(this)">
+                                <i class="bi bi-trash">حذف</i>
+                            </button>
+                            <button class="btn btn-sm btn-secondary"
+                                    data-id="@item.Id"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#ChangePasswordModal"
+                                    onclick="fillchangepasswordUserModal(this)">
+                                <i class="bi bi-trash">تغيير كلمة المرور</i>
+                            </button>
+                        </td>
+
+                    </tr>
+                    i++;
+                }
+            }
+        </tbody>
+    </table>
+</div>
+<div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="Update" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editUserModalLabel">تعديل مستخدم</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="editUserId" name="Id" />
+                    <div class="mb-3">
+                        <label class="form-label">الاسم</label>
+                        <input type="text" class="form-control" id="editUserFirstName" name="FirstName" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">الكنية</label>
+                        <input type="text" class="form-control" id="editUserLastName" name="LastName" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">البريد الإلكتروني</label>
+                        <input type="email" class="form-control" id="editUserEmail" name="Email" />
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="editUserStatus" name="IsActive" />
+                        <label class="form-check-label" for="editUserStatus">مفعل</label>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-warning">حفظ التعديلات</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="Delete" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteUserModalLabel">تأكيد الحذف</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="deleteUserId" name="id" />
+                    <p>هل أنت متأكد من حذف المستخدم <strong id="deleteUserName"></strong>؟</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-danger">نعم، حذف</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="detailsUserModal" tabindex="-1" aria-labelledby="detailsUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="detailsUserModalLabel">تفاصيل المستخدم</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>الرقم:</strong> <span id="detailsUserId"></span></p>
+                <p><strong>الاسم:</strong> <span id="detailsUserFirstName"></span></p>
+                <p><strong>الكنية:</strong> <span id="detailsUserLastName"></span></p>
+                <p><strong>البريد:</strong> <span id="detailsUserEmail"></span></p>
+                <p><strong>الحالة:</strong> <span id="detailsUserStatus"></span></p>
+                <p><strong>النوع:</strong> <span id="detailsUserAccountType"></span></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">إغلاق</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="ChangePasswordModal" tabindex="-1" aria-labelledby="ChangePasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="ChangePassword" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editUserModalLabel">تعديل  كلمة سر المستخدم</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="ChangePasswordUserId" name="Id" />
+                    <div class="mb-3">
+                        <label class="form-label">كلمة السر القديمة</label>
+                        <input type="password" class="form-control" id="ChangePasswordOldPassWord" name="OldPassword" required/>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">الكلمة الجديدة</label>
+                        <input type="password" class="form-control" id="ChangePasswordNewPassword" name="NewPassword" required/>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">تأكيد الكلمة الجديدة</label>
+                        <input type="password" class="form-control" id="ChangePasswordNewPasswordConfirm" name="ConfirmNewPassword" required/>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-warning">حفظ التعديلات</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script>
+        function fillEditUserModal(button) {
+            document.getElementById("editUserId").value = button.dataset.id;
+            document.getElementById("editUserFirstName").value = button.dataset.firstname;
+            document.getElementById("editUserLastName").value = button.dataset.lastname;
+            document.getElementById("editUserEmail").value = button.dataset.email;
+            document.getElementById("editUserStatus").checked = button.dataset.status === "Active";
+
+        }
+
+        function fillDetailsUserModal(button) {
+            document.getElementById("detailsUserId").textContent = button.dataset.id;
+            document.getElementById("detailsUserFirstName").textContent = button.dataset.firstname;
+            document.getElementById("detailsUserLastName").textContent = button.dataset.lastname;
+            document.getElementById("detailsUserEmail").textContent = button.dataset.email;
+            document.getElementById("detailsUserStatus").textContent =
+                button.dataset.status == "Active" ? "مفعل" : "معطل";
+            document.getElementById("detailsUserAccountType").textContent =
+                button.dataset.accounttype === "Admin" ? "مدير" : "مستخدم";
+        }
+
+        function fillDeleteUserModal(button) {
+            document.getElementById("deleteUserId").value = button.dataset.id;
+            document.getElementById("deleteUserName").textContent = button.dataset.name;
+        }
+        function fillchangepasswordUserModal(button) {
+            document.getElementById("ChangePasswordUserId").value = button.dataset.id;
+        }
+    </script>
+
+}

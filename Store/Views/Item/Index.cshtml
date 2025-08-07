@@ -1,0 +1,281 @@
+﻿@using Store.DTO
+@using Store.DTO.Pagination
+@model PagedList<GetItemDTO>
+
+@functions {
+    public string BuildPageUrl(int page)
+    {
+        var query = System.Web.HttpUtility.ParseQueryString(Context.Request.QueryString.Value ?? string.Empty);
+        query["PageNumber"] = page.ToString();
+        return $"{Context.Request.Path}?{query}";
+    }
+}
+
+@{
+    ViewData["Title"] = "قائمة المواد";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<p>
+    <a asp-action="Create" class="btn btn-success">إضافة مادة</a>
+</p>
+
+<table class="table table-striped table-bordered text-center align-middle">
+    <thead class="table-dark">
+        <tr>
+            <th>الرقم</th>
+            <th>الباركود</th>
+            <th>المادة</th>
+            <th>سعر المبيع</th>
+            <th>الكمية الموجودة</th>
+            <th>القسم</th>
+            <th>المورد</th>
+            <th>العمليات</th>
+        </tr>
+    </thead>
+    <tbody>
+        @{
+            var i = 1;
+        }
+        @foreach (var item in Model.Items)
+        {
+            <tr>
+                <td>@(i++)</td>
+                <td>@item.Code</td>
+                <td>@item.Description</td>
+                <td>@item.Price</td>
+                <td>@item.Qty</td>
+                <td>@item.Division</td>
+                <td>@item.Vendor</td>
+                <td>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button class="btn btn-warning"
+                                data-bs-toggle="modal" data-bs-target="#editItemModal"
+                                data-id="@item.Id"
+                                data-code="@item.Code"
+                                data-description="@item.Description"
+                                data-cost="@item.Cost"
+                                data-qty="@item.Qty"
+                                data-price="@item.Price"
+                                data-divisionid="@item.DivisionId"
+                                data-vendorid="@item.VendorId"
+                                onclick="fillEditItemModal(this)">
+                            تعديل
+                        </button>
+                        <button class="btn btn-primary"
+                                data-bs-toggle="modal" data-bs-target="#detailsItemModal"
+                                data-code="@item.Code"
+                                data-description="@item.Description"
+                                data-QTY ="@item.Qty"
+                                data-cost="@item.Cost"
+                                data-price="@item.Price"
+                                data-division="@item.Division"
+                                data-vendor="@item.Vendor"
+                                onclick="fillDetailsItemModal(this)">
+                            عرض
+                        </button>
+                        <button class="btn btn-danger"
+                                data-bs-toggle="modal" data-bs-target="#deleteItemModal"
+                                data-id="@item.Id"
+                                data-code="@item.Code"
+                                data-description="@item.Description"
+                                onclick="fillDeleteItemModal(this)">
+                            حذف
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (Model.TotalPages > 1)
+{
+    var pageQuery = Context.Request.Query["PageNumber"].ToString();
+    var currentPage = int.TryParse(pageQuery, out var page) ? page : 1;
+
+    <nav class="d-flex justify-content-center mt-4" aria-label="Page navigation">
+        <ul class="pagination">
+            <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                <a class="page-link" href="@BuildPageUrl(currentPage - 1)">السابق</a>
+            </li>
+
+            @for (int iPage = 1; iPage <= Model.TotalPages; iPage++)
+            {
+                <li class="page-item @(iPage == currentPage ? "active" : "")">
+                    <a class="page-link" href="@BuildPageUrl(iPage)">@iPage</a>
+                </li>
+            }
+
+            <li class="page-item @(currentPage == Model.TotalPages ? "disabled" : "")">
+                <a class="page-link" href="@BuildPageUrl(currentPage + 1)">التالي</a>
+            </li>
+        </ul>
+    </nav>
+}
+<!-- مودال تعديل مادة -->
+<div class="modal fade" id="editItemModal" tabindex="-1" aria-labelledby="editItemModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form asp-action="Edit" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editItemModalLabel">تعديل مادة</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="editItemId" name="Id" />
+                    <input type="hidden" name="id" value="" id="editItemIdCopy" />
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="editItemCode" class="form-label">الباركود</label>
+                            <input type="text" class="form-control" id="editItemCode" name="Code" required />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="editItemDescription" class="form-label">الوصف</label>
+                            <input type="text" class="form-control" id="editItemDescription" name="Description" required />
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="editItemCost" class="form-label">سعر التكلفة</label>
+                            <input type="number" step="0.01" class="form-control" id="editItemCost" name="Cost" required />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="editItemPrice" class="form-label">سعر المبيع</label>
+                            <input type="number" step="0.01" class="form-control" id="editItemPrice" name="Price" required />
+                        </div>
+                        <div class="col-md-4 mb-3" hidden>
+                            <label for="editItemQty" class="form-label">الكمية</label>
+                            <input type="number" class="form-control" id="editItemQty" name="Qty" />
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="editItemDivision" class="form-label">القسم</label>
+                            <select class="form-select" id="editItemDivision" name="DivisionId" required>
+                                @foreach (var division in ViewBag.Divisions as List<SelectListItem>)
+                                {
+                                    <option value="@division.Value">@division.Text</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="editItemVendor" class="form-label">المورد</label>
+                            <select class="form-select" id="editItemVendor" name="VendorId" required>
+                                @foreach (var vendor in ViewBag.Vendors as List<SelectListItem>)
+                                {
+                                    <option value="@vendor.Value">@vendor.Text</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-warning">حفظ التعديلات</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- مودال عرض تفاصيل مادة -->
+<div class="modal fade" id="detailsItemModal" tabindex="-1" aria-labelledby="detailsItemModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="detailsItemModalLabel">تفاصيل المادة</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+            </div>
+            <div class="modal-body">
+                <dl class="row">
+                    <dt class="col-sm-3">الباركود:</dt>
+                    <dd class="col-sm-9" id="detailsItemCode"></dd>
+
+                    <dt class="col-sm-3">الوصف:</dt>
+                    <dd class="col-sm-9" id="detailsItemDescription"></dd>
+
+                    <dt class="col-sm-3">سعر التكلفة:</dt>
+                    <dd class="col-sm-9" id="detailsItemCost"></dd>
+
+                    <dt class="col-sm-3">سعر المبيع:</dt>
+                    <dd class="col-sm-9" id="detailsItemPrice"></dd>
+
+                    <dt class="col-sm-3">الكمية الموجودة:</dt>
+                    <dd class="col-sm-9" id="detailsItemQty"></dd>
+
+                    <dt class="col-sm-3">القسم:</dt>
+                    <dd class="col-sm-9" id="detailsItemDivision"></dd>
+
+                    <dt class="col-sm-3">المورد:</dt>
+                    <dd class="col-sm-9" id="detailsItemVendor"></dd>
+                </dl>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">إغلاق</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- مودال حذف مادة -->
+<div class="modal fade" id="deleteItemModal" tabindex="-1" aria-labelledby="deleteItemModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="Delete" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteItemModalLabel">تأكيد حذف المادة</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="deleteItemId" name="id" />
+                    <p>هل أنت متأكد من حذف المادة: <strong id="deleteItemDescription"></strong> (باركود: <span id="deleteItemCode"></span>)؟</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-danger">نعم، حذف</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function fillEditItemModal(button) {
+            document.getElementById('editItemId').value = button.dataset.id;
+            document.getElementById('editItemIdCopy').value = button.dataset.id;
+            document.getElementById('editItemCode').value = button.dataset.code;
+            document.getElementById('editItemDescription').value = button.dataset.description;
+            document.getElementById('editItemCost').value = button.dataset.cost;
+            document.getElementById('editItemPrice').value = button.dataset.price;
+            document.getElementById('editItemQty').value = button.dataset.qty || 0;
+            document.getElementById('editItemDivision').value = button.dataset.divisionid;
+            document.getElementById('editItemVendor').value = button.dataset.vendorid;
+        }
+
+        function fillDetailsItemModal(button) {
+            document.getElementById('detailsItemCode').textContent = button.dataset.code;
+            document.getElementById('detailsItemDescription').textContent = button.dataset.description;
+            document.getElementById('detailsItemCost').textContent = button.dataset.cost + " ل.س";
+            document.getElementById('detailsItemPrice').textContent = button.dataset.price + " ل.س";
+            document.getElementById('detailsItemQty').textContent = button.dataset.qty;
+            document.getElementById('detailsItemDivision').textContent = button.dataset.division;
+            document.getElementById('detailsItemVendor').textContent = button.dataset.vendor;
+        }
+
+        function fillDeleteItemModal(button) {
+            document.getElementById('deleteItemId').value = button.dataset.id;
+            document.getElementById('deleteItemDescription').textContent = button.dataset.description;
+            document.getElementById('deleteItemCode').textContent = button.dataset.code;
+        }
+    </script>
+
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

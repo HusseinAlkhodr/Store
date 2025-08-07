@@ -1,0 +1,13 @@
+﻿@model decimal
+
+<input class="form-control me-2"
+       type="number"
+       id="rate"
+       name="rate"
+       placeholder="سعر الصرف الحالي @Model.ToString("0.##")"
+       aria-label="سعر الصرف"
+       oninput="validateRate()" />
+
+<input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+
+<button class="btn btn-outline-success" type="submit" id="submitBtn" disabled>تغيير</button>

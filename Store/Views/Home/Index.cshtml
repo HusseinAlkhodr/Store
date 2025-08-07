@@ -1,0 +1,13 @@
+﻿@{
+    ViewData["Title"] = "الرئيسية";
+}
+
+<div class="d-flex flex-column justify-content-center align-items-center vh-100 text-center bg-light">
+    <h1 class="display-3 mb-4">مرحبًا بك في مركز القلعة للتجارة</h1>
+    <p class="lead mb-4" style="max-width: 600px;">
+        نرحب بك في مركز القلعة للتجارة، حيث الجودة والتميز في كل تعامل.
+        استكشف خدماتنا واكتشف فرص التعاون والنمو.
+    </p>
+    <a asp-controller="Invoice" asp-action="CreateSaleInvoice" class="btn btn-primary btn-lg mx-2">فاتورة بيع جديدة</a>
+    <a asp-controller="Invoice" asp-action="CreateBuyInvoice" class="btn btn-outline-primary btn-lg mx-2">فاتورة شراء جديدة</a>
+</div>

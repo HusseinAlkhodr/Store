@@ -1,0 +1,12 @@
+﻿@{
+    ViewData["Title"] = "غير مصرح";
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["ErrorMessage"]
+    </div>
+}
+<h2 class="text-danger">ليس لديك صلاحية للوصول إلى هذه الصفحة</h2>
+<p>يرجى الرجوع إلى الصفحة الرئيسية أو تسجيل الدخول باستخدام حساب لديه الصلاحيات المطلوبة.</p>
+<a href="/" class="btn btn-secondary">العودة إلى الصفحة الرئيسية</a>
